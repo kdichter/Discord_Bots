@@ -21,13 +21,33 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 # Track current sessions
 current_sessions = {}
 
+# Applications to track - add your apps here!
+TRACKED_APPS = {
+    # Games
+    "HollowKnight.exe",
+    "Minecraft.exe",
+    "Valorant.exe",
+
+    # Productivity
+    "Code.exe",           # VS Code
+    "chrome.exe",         # Chrome
+    "firefox.exe",        # Firefox
+    "Discord.exe",      # OBS
+
+    # Entertainment
+    "spotify.exe",
+}
+
 
 def get_active_applications():
-    """Get list of currently running applications"""
+    """Get list of currently running applications (filtered by TRACKED_APPS)"""
     apps = set()
     for proc in psutil.process_iter(['name']):
         try:
-            apps.add(proc.info['name'])
+            proc_name = proc.info['name']
+            # Only track apps in our whitelist
+            if proc_name in TRACKED_APPS:
+                apps.add(proc_name)
         except (psutil.NoSuchProcess, psutil.AccessDenied):
             pass
     return apps
@@ -60,18 +80,22 @@ async def track_applications():
         end_time = datetime.datetime.now()
         duration = (end_time - start_time).total_seconds()
 
-        try:
-            data = {
-                "user_id": user_id,
-                "application_name": app,
-                "start_time": start_time.isoformat(),
-                "end_time": end_time.isoformat(),
-                "duration_seconds": duration
-            }
-            supabase.table("app_usage").insert(data).execute()
-            print(f"Logged: {app} - {duration:.0f}s")
-        except Exception as e:
-            print(f"Error logging {app}: {e}")
+        # Only log if session lasted longer than 180 seconds (filters out quick alt-tabs)
+        if duration > 180:
+            try:
+                data = {
+                    "user_id": user_id,
+                    "application_name": app,
+                    "start_time": start_time.isoformat(),
+                    "end_time": end_time.isoformat(),
+                    "duration_seconds": duration
+                }
+                supabase.table("app_usage").insert(data).execute()
+                print(f"Logged: {app} - {duration:.0f}s")
+            except Exception as e:
+                print(f"Error logging {app}: {e}")
+        else:
+            print(f"Skipped (too short): {app} - {duration:.0f}s")
 
         del current_sessions[app]
 
