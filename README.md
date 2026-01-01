@@ -110,3 +110,15 @@ FROM app_usage
 GROUP BY date, application_name
 ORDER BY date DESC, hours DESC;
 ```
+## 8. Enable on Startup (Optional)
+1. Create a batch file in your bot folder called start_bot.bat:
+```
+@echo off
+   cd /d "C:\path\to\your\bot\folder"
+   python bot.py
+   pause
+(Replace C:\path\to\your\bot\folder with your actual path)
+```
+2. Press Win + R, type shell:startup, and press Enter
+3. Create a shortcut to your start_bot.bat file in this Startup folder
+4. Restart your computer to test
