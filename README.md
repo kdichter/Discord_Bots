@@ -1,10 +1,10 @@
 # Discord_Bots
 Repository of different discord bots written with vibe coding
 
-PACKAGE INSTALLATIONS
+PACKAGE INSTALLATIONS< br / >
 pip install -r requirements.txt
 
-QUERIES
+QUERIES< br / >
 -- Total time per application
 SELECT 
     application_name,
