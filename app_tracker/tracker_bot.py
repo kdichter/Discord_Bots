@@ -23,32 +23,45 @@ current_sessions = {}
 
 # Applications to track - add your apps here!
 TRACKED_APPS = {
-    # Games
-    "HollowKnight.exe",
-    "Minecraft.exe",
-    "Valorant.exe",
+    # Browsers
+    "chrome.exe",
+    "firefox.exe",
+    "steam.exe",
 
-    # Productivity
+    # Development
     "Code.exe",           # VS Code
-    "chrome.exe",         # Chrome
-    "firefox.exe",        # Firefox
-    "Discord.exe",      # OBS
+    "idea64.exe"
+    "pycharm64.exe",
+    "notepad++.exe",
 
-    # Entertainment
+    # Communication
+    "Discord.exe",
+    "Teams.exe",
+
+    # Media
     "spotify.exe",
+    "stremio-shell-ng.exe"
 }
 
 
 def get_active_applications():
     """Get list of currently running applications (filtered by TRACKED_APPS)"""
     apps = set()
-    for proc in psutil.process_iter(['name']):
+    # Create lowercase version of tracked apps for case-insensitive matching
+    tracked_lower = {app.lower(): app for app in TRACKED_APPS}
+
+    for proc in psutil.process_iter(['name', 'exe']):
         try:
             proc_name = proc.info['name']
-            # Only track apps in our whitelist
-            if proc_name in TRACKED_APPS:
+
+            # Check if in tracked apps (case-insensitive)
+            if proc_name.lower() in tracked_lower:
                 apps.add(proc_name)
-        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            # Auto-detect Steam games (check if launched from Steam directory)
+            elif proc.info['exe'] and 'steam' in proc.info['exe'].lower() and 'steamapps' in proc.info['exe'].lower():
+                apps.add(proc_name)
+                print(f"Detected Steam game: {proc_name}")
+        except (psutil.NoSuchProcess, psutil.AccessDenied, TypeError):
             pass
     return apps
 
