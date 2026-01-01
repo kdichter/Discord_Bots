@@ -20,7 +20,7 @@ Once running, use these Discord commands:
 !today - View today's usage statistics
 ```
 
-QUERIE DATABASE DIRECTLY <br/>
+QUERY DATABASE DIRECTLY <br/>
 1. **Total time per application**
 ```
 SELECT 
