@@ -96,15 +96,27 @@ async def track_applications():
         # Only log if session lasted longer than 180 seconds (filters out quick alt-tabs)
         if duration > 180:
             try:
+                # Format date and times separately
+                session_date = start_time.strftime("%Y-%m-%d")
+                start_formatted = start_time.strftime("%H:%M:%S")
+                end_formatted = end_time.strftime("%H:%M:%S")
+
+                # Format duration as HH:MM:SS
+                hours = int(duration // 3600)
+                minutes = int((duration % 3600) // 60)
+                seconds = int(duration % 60)
+                duration_formatted = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+
                 data = {
                     "user_id": user_id,
                     "application_name": app,
-                    "start_time": start_time.isoformat(),
-                    "end_time": end_time.isoformat(),
-                    "duration_seconds": duration
+                    "session_date": session_date,
+                    "start_time": start_formatted,
+                    "end_time": end_formatted,
+                    "duration": duration_formatted
                 }
                 supabase.table("app_usage").insert(data).execute()
-                print(f"Logged: {app} - {duration:.0f}s")
+                print(f"Logged: {app} - {duration_formatted}")
             except Exception as e:
                 print(f"Error logging {app}: {e}")
         else:

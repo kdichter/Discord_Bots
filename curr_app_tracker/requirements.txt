@@ -1,0 +1,13 @@
+discord.py
+supabase
+python-dotenv
+
+# Windows only:
+pywin32
+psutil
+
+# macOS only:
+# pyobjc-framework-Cocoa
+
+# Linux only:
+# (requires xdotool installed: sudo apt-get install xdotool)
