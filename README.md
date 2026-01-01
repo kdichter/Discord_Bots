@@ -35,8 +35,8 @@ CREATE INDEX idx_app_name ON app_usage(application_name);
 CREATE INDEX idx_start_time ON app_usage(start_time);
 ```
 4. Get your credentials from Settings → API:
-* SUPABASE_URL (Project URL)
-* SUPABASE_KEY (anon/public key)
+    * SUPABASE_URL (Project URL)
+    * SUPABASE_KEY (anon/public key)
 
 ## 3. Setup Discord Bot
 
@@ -44,12 +44,31 @@ CREATE INDEX idx_start_time ON app_usage(start_time);
 2. Click "New Application"
 3. Go to "Bot" section and click "Add Bot"
 4. Enable these intents:
-* Message Content Intent
-* Presence Intent (if you want to track Discord usage)
+    * Message Content Intent
+    * Presence Intent (if you want to track Discord usage)
 5. Copy your bot token
+    1. Go to Discord Developer Portal
+    2. Click on your application (the one you created)
+    3. Click "**Bot**" in the left sidebar
+    4. Under the bot's username, you'll see a section called "**TOKEN**"
+    5. Click "**Reset Token**" (if it's your first time) or "**Copy**" if the token is already visible
+    6. Copy this token and save it somewhere safe (you'll paste it into your ```.env``` file later) <br/>
+        ⚠️ Keep this secret! Don't share it with anyone or post it publicly
 6. Invite bot to your server using OAuth2 URL Generator:
-* Scopes: bot
-* Permissions: Send Messages, Read Messages/View Channels
+    1. Still in the Discord Developer Portal, click "OAuth2" in the left sidebar
+    2. Click "URL Generator" (it's a sub-menu under OAuth2)
+    3. In the SCOPES section, check the box for: </br>
+        ✅ bot </br>
+    4. A new **BOT PERMISSIONS** section will appear below
+    5. In the BOT **PERMISSIONS** section, check these boxes: </br>
+        ✅ Send Messages </br>
+        ✅ Read Messages/View Channels (might be called "**View Channels**") </br>
+    6. At the very bottom, you'll see a **GENERATED URL**
+    7. Copy that URL and paste it into your web browser
+    8. Select which server you want to add the bot to (you need to be an admin of that server)
+    9. Click "**Authorize**" </br>
+    
+    Your bot should now appear in your server (it'll be offline until you run the Python script).
 
 ## 4. Create .env File
 Create a ```.env``` file in your project directory:
