@@ -16,7 +16,7 @@ Install with:
 bashpip install -r requirements.txt
 ```
 ## 2. Setup Supabase (Free Database)
-1. Go to [supabase.com](#https://supabase.com) and create a free account
+1. Go to [supabase.com](https://supabase.com) and create a free account
 2. Create a new project
 3. Go to the SQL Editor and run this to create your table:
 
@@ -40,7 +40,7 @@ CREATE INDEX idx_start_time ON app_usage(start_time);
 
 ## 3. Setup Discord Bot
 
-1. Go to [Discord Developer Portal](#https://discord.com/developers/applications)
+1. Go to [Discord Developer Portal](https://discord.com/developers/applications)
 2. Click "New Application"
 3. Go to "Bot" section and click "Add Bot"
 4. Enable these intents:
@@ -55,7 +55,7 @@ CREATE INDEX idx_start_time ON app_usage(start_time);
     6. Copy this token and save it somewhere safe (you'll paste it into your ```.env``` file later) <br/>
         ⚠️ Keep this secret! Don't share it with anyone or post it publicly
 6. Invite bot to your server using OAuth2 URL Generator:
-    1. Still in the Discord Developer Portal, click "OAuth2" in the left sidebar
+    1. Still in the [Discord Developer Portal](https://discord.com/developers/applications), click "OAuth2" in the left sidebar
     2. Click "URL Generator" (it's a sub-menu under OAuth2)
     3. In the SCOPES section, check the box for: </br>
         ✅ bot </br>
