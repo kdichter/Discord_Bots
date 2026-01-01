@@ -1,5 +1,5 @@
 # Discord_Bots
-Repository of different discord bots written with vibe coding
+Collection of Discord bots built through vibe coding with Claude AI.
 
 # Discord Application Tracker Setup
 
