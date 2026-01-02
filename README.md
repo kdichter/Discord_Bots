@@ -4,14 +4,6 @@ Collection of Discord bots built through vibe coding with Claude AI.
 # Discord Application Tracker Setup
 
 ## 1. Install Dependencies
-Create a **```requirements.txt```** file:
-```
-discord.py
-psutil
-supabase
-python-dotenv
-```
-Install with:
 ```
 bashpip install -r requirements.txt
 ```
@@ -25,14 +17,15 @@ CREATE TABLE app_usage (
     id BIGSERIAL PRIMARY KEY,
     user_id TEXT NOT NULL,
     application_name TEXT NOT NULL,
-    start_time TIMESTAMPTZ NOT NULL,
-    end_time TIMESTAMPTZ NOT NULL,
-    duration_seconds NUMERIC NOT NULL,
+    session_date DATE NOT NULL,
+    start_time TEXT NOT NULL,
+    end_time TEXT NOT NULL,
+    duration TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE INDEX idx_app_name ON app_usage(application_name);
-CREATE INDEX idx_start_time ON app_usage(start_time);
+CREATE INDEX idx_session_date ON app_usage(session_date);
 ```
 4. Get your credentials from Settings → API:
     * SUPABASE_URL (Project URL)
@@ -90,25 +83,21 @@ Once running, use these Discord commands:
 
 ## 7. Query Database Directly
 You can query your data anytime through Supabase dashboard: </br>
-*-- Total time per application*
+
 ```
+-- Total time per application --
+
 SELECT 
     application_name,
-    SUM(duration_seconds) / 3600 as total_hours
+    TO_CHAR(
+        (SUM(
+            EXTRACT(EPOCH FROM duration::interval)
+        ) || ' seconds')::interval,
+        'HH24:MI:SS'
+    ) as total_duration
 FROM app_usage
 GROUP BY application_name
-ORDER BY total_hours DESC;
-```
-
-*-- Usage by date*
-```
-SELECT 
-    DATE(start_time) as date,
-    application_name,
-    SUM(duration_seconds) / 3600 as hours
-FROM app_usage
-GROUP BY date, application_name
-ORDER BY date DESC, hours DESC;
+ORDER BY SUM(EXTRACT(EPOCH FROM duration::interval)) DESC;
 ```
 ## 8. Enable on Startup (Optional)
 1. Create a batch file in your bot folder called start_bot.bat:
@@ -127,5 +116,5 @@ ORDER BY date DESC, hours DESC;
 ```
 2. Replace C:\path\to\your\bot\folder with your actual path
 3. Press Win + R, type shell:startup, and press Enter
-4. Create a shortcut to your start_bot.bat file in this Startup folder
+4. Create a shortcut to your ```.bat``` file in this Startup folder
 5. Restart your computer to test
