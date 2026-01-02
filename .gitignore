@@ -34,6 +34,6 @@ desktop.ini
 *.db
 *.sqlite
 
-# Batch files (optional - only if you don't want to share them)
-# start_bot.bat
-# start_bot_silent.vbs
+# Startup scripts (contains local paths)
+*.vbs
+*.bat
