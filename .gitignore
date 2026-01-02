@@ -1,0 +1,39 @@
+# Environment variables (DO NOT COMMIT!)
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.pyo
+
+# Logs
+*.log
+bot_log.txt
+startup_log.txt
+
+# Virtual environment (if you use one)
+venv/
+env/
+ENV/
+
+# IDE - PyCharm
+.idea/
+*.iml
+
+# IDE - VS Code
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Database (if you ever store local copies)
+*.db
+*.sqlite
+
+# Startup scripts (contains local paths)
+*.vbs
+*.bat

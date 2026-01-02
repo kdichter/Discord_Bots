@@ -33,8 +33,8 @@ current_app = None
 session_start = None
 previous_app = None  # Track what we were on before
 grace_period_start = None  # When did we switch away
-MIN_SESSION_DURATION = 180  # Only log sessions longer than this (in seconds)
-GRACE_PERIOD = 120  # If we return within this time, continue the session (in seconds)
+MIN_SESSION_DURATION = 60  # Only log sessions longer than this (in seconds)
+GRACE_PERIOD = 60  # If we return within this time, continue the session (in seconds)
 
 # Applications to track - add your apps here!
 TRACKED_APPS = {
@@ -76,8 +76,14 @@ def should_track(app_name):
         return False
 
     # Check against Steam games
-    if 'steam' in app_name.lower() and 'steamapps' in app_name.lower():
-        return True
+    try:
+        if platform.system() == "Windows":
+            for proc in psutil.process_iter(['name', 'exe']):
+                if proc.info['name'] == app_name and proc.info['exe']:
+                    if 'steam' in proc.info['exe'].lower() and 'steamapps' in proc.info['exe'].lower():
+                        return True
+    except:
+        pass
 
     # Check against tracked apps (case-insensitive)
     tracked_lower = {app.lower() for app in TRACKED_APPS}
@@ -90,7 +96,36 @@ async def on_ready():
     track_active_window.start()
 
 
-@tasks.loop(seconds=30)  # Check every 30 seconds for reasonable accuracy
+# Shutdown handler to log current session before closing
+import signal
+import sys
+
+
+def shutdown_handler(signum, frame):
+    """Handle shutdown gracefully and log current session"""
+    global current_app, session_start, previous_app, grace_period_start
+
+    print("\nShutting down bot...")
+
+    # Log any active session (currently tracking)
+    if current_app and session_start:
+        log_session(current_app, session_start, datetime.datetime.now())
+        print(f"Logged final session: {current_app}")
+
+    # Don't log grace period sessions - they were already interrupted
+    # If we're in grace period, the user switched away and hasn't come back
+    # This means they weren't actively using that app when shutdown happened
+
+    print("Bot stopped successfully")
+    sys.exit(0)
+
+
+# Register shutdown handlers
+signal.signal(signal.SIGINT, shutdown_handler)  # Ctrl+C
+signal.signal(signal.SIGTERM, shutdown_handler)  # Task kill
+
+
+@tasks.loop(seconds=15)  # Check every 15 seconds for reasonable accuracy
 async def track_active_window():
     """Monitor active window and log when it changes"""
     global current_app, session_start, previous_app, grace_period_start
@@ -244,5 +279,8 @@ async def today(ctx):
         await ctx.send(f"Error fetching today's stats: {e}")
 
 
-# Run the bot
-bot.run(os.getenv("DISCORD_TOKEN"))
+try:
+    # Run the bot
+    bot.run(os.getenv("DISCORD_TOKEN"))
+except KeyboardInterrupt:
+    shutdown_handler(None, None)
