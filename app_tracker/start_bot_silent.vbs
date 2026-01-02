@@ -1,0 +1,1 @@
+CreateObject("Wscript.Shell").Run "pythonw C:\Users\Kevin\Git\Discord_Bots\app_tracker\tracker_bot.py", 0, False
