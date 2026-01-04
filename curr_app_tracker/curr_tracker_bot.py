@@ -33,15 +33,26 @@ current_app = None
 session_start = None
 previous_app = None  # Track what we were on before
 grace_period_start = None  # When did we switch away
-MIN_SESSION_DURATION = 60  # Only log sessions longer than this (in seconds)
-GRACE_PERIOD = 60  # If we return within this time, continue the session (in seconds)
+MIN_SESSION_DURATION = 120  # Only log sessions longer than this (in seconds)
+GRACE_PERIOD = 120  # If we return within this time, continue the session (in seconds)
 
 # Applications to track - add your apps here!
 TRACKED_APPS = {
+    # Browsers
     "chrome.exe",
-    "Code.exe",
+    "firefox.exe",
+    # Development
+    "Code.exe",  # VS Code
+    "idea64.exe",
+    "pycharm64.exe",
+    # Communication
     "Discord.exe",
-    # Add more applications you want to track
+    "Teams.exe",
+    # Games
+    "VALORANT.exe",
+    # Media
+    "spotify.exe",
+    "stremio-shell-ng.exe"
 }
 
 
@@ -125,7 +136,7 @@ signal.signal(signal.SIGINT, shutdown_handler)  # Ctrl+C
 signal.signal(signal.SIGTERM, shutdown_handler)  # Task kill
 
 
-@tasks.loop(seconds=15)  # Check every 15 seconds for reasonable accuracy
+@tasks.loop(seconds=10)  # Check every 10 seconds
 async def track_active_window():
     """Monitor active window and log when it changes"""
     global current_app, session_start, previous_app, grace_period_start
@@ -134,11 +145,31 @@ async def track_active_window():
 
     # Only track if it's in our list
     if not should_track(active_app):
-        # If we were tracking something, start grace period
+        # If we were tracking something, check if it's still running
         if current_app and not grace_period_start:
-            previous_app = current_app
-            grace_period_start = datetime.datetime.now()
-            print(f"Grace period started for {previous_app}")
+            # Check if the app process is still running (grace period)
+            # or if it was closed (immediate log)
+            app_still_running = False
+            try:
+                if platform.system() == "Windows":
+                    for proc in psutil.process_iter(['name']):
+                        if proc.info['name'] == current_app:
+                            app_still_running = True
+                            break
+            except (psutil.NoSuchProcess, psutil.AccessDenied, KeyError):
+                pass
+
+            if app_still_running:
+                # App is running but not active - start grace period
+                previous_app = current_app
+                grace_period_start = datetime.datetime.now()
+                current_app = None
+                print(f"Grace period started for {previous_app}")
+            else:
+                # App was closed - log immediately
+                log_session(current_app, session_start, datetime.datetime.now())
+                current_app = None
+                session_start = None
 
         # Check if grace period expired
         if grace_period_start:
@@ -223,6 +254,10 @@ async def stats(ctx, app_name: str = None):
     try:
         if app_name:
             response = supabase.table("app_usage").select("*").eq("application_name", app_name).execute()
+            if not response.data:
+                await ctx.send(f"No data found for **{app_name}**")
+                return
+
             total_seconds = sum(
                 sum(int(x) * 60 ** i for i, x in enumerate(reversed(row['duration'].split(':'))))
                 for row in response.data
@@ -232,6 +267,10 @@ async def stats(ctx, app_name: str = None):
         else:
             response = supabase.table("app_usage").select("*").execute()
 
+            if not response.data:
+                await ctx.send("No usage data found!")
+                return
+
             app_totals = {}
             for row in response.data:
                 app = row['application_name']
@@ -239,14 +278,19 @@ async def stats(ctx, app_name: str = None):
                 seconds = h * 3600 + m * 60 + s
                 app_totals[app] = app_totals.get(app, 0) + seconds
 
-            sorted_apps = sorted(app_totals.items(), key=lambda x: x[1], reverse=True)[:10]
+            sorted_apps = sorted(app_totals.items(), key=lambda x: x[1], reverse=True)
 
-            message = "**Top 10 Applications:**\n"
+            message = f"**All Applications ({len(sorted_apps)} total):**\n"
             for app, seconds in sorted_apps:
                 hours = seconds / 3600
                 message += f"• {app}: {hours:.2f} hours\n"
 
-            await ctx.send(message)
+            # Discord has a 2000 character limit, split if needed
+            if len(message) > 2000:
+                await ctx.send(message[:2000])
+                await ctx.send(message[2000:])
+            else:
+                await ctx.send(message)
     except Exception as e:
         await ctx.send(f"Error fetching stats: {e}")
 
@@ -260,6 +304,10 @@ async def today(ctx):
         response = supabase.table("app_usage").select("*").eq("session_date",
                                                               today_start.strftime("%Y-%m-%d")).execute()
 
+        if not response.data:
+            await ctx.send("No usage data for today!")
+            return
+
         app_totals = {}
         for row in response.data:
             app = row['application_name']
@@ -267,9 +315,9 @@ async def today(ctx):
             seconds = h * 3600 + m * 60 + s
             app_totals[app] = app_totals.get(app, 0) + seconds
 
-        sorted_apps = sorted(app_totals.items(), key=lambda x: x[1], reverse=True)[:10]
+        sorted_apps = sorted(app_totals.items(), key=lambda x: x[1], reverse=True)
 
-        message = "**Today's Top Applications:**\n"
+        message = f"**Today's Applications ({len(sorted_apps)} total):**\n"
         for app, seconds in sorted_apps:
             hours = seconds / 3600
             message += f"• {app}: {hours:.2f} hours\n"
@@ -277,6 +325,28 @@ async def today(ctx):
         await ctx.send(message)
     except Exception as e:
         await ctx.send(f"Error fetching today's stats: {e}")
+
+
+@bot.command()
+async def apps(ctx):
+    """List all unique applications that have been tracked"""
+    try:
+        response = supabase.table("app_usage").select("application_name").execute()
+
+        if not response.data:
+            await ctx.send("No applications tracked yet!")
+            return
+
+        # Get unique app names
+        unique_apps = sorted(set(row['application_name'] for row in response.data))
+
+        message = f"**Tracked Applications ({len(unique_apps)} total):**\n"
+        for app in unique_apps:
+            message += f"• {app}\n"
+
+        await ctx.send(message)
+    except Exception as e:
+        await ctx.send(f"Error fetching apps: {e}")
 
 
 try:
