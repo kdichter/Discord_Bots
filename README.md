@@ -72,7 +72,7 @@ SUPABASE_KEY=your_supabase_anon_key_here
 ```
 ## 5. Run the Bot
 ```
-bashpython bot.py
+python bot.py
 ```
 ## 6. Using the Bot
 Once running, use these Discord commands:
